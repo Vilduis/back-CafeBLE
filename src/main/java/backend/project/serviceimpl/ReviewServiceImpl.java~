@@ -1,0 +1,88 @@
+package backend.project.serviceimpl;
+
+import backend.project.dtos.DTOReview;
+import backend.project.entities.Client;
+import backend.project.entities.Product;
+import backend.project.entities.Review;
+import backend.project.exceptions.ResourceNotFoundException;
+import backend.project.repositories.ReviewsRepository;
+import backend.project.services.ClientService;
+import backend.project.services.ProductService;
+import backend.project.services.ReviewService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ReviewServiceImpl implements ReviewService {
+    @Autowired
+    ReviewsRepository reviewsRepository;
+    @Autowired
+    ClientService clientService;
+    @Autowired
+    ProductService productService;
+
+    @Override
+    public Review insertReview(DTOReview dtoReview)
+    {
+        Product product =(dtoReview.getProductId() != null) ? productService.findById(dtoReview.getProductId()) : null;
+        Client client = (dtoReview.getClientId() != null) ? clientService.findById(dtoReview.getClientId()) : null;
+
+        if(dtoReview.getRating() == null || dtoReview.getRating() < 0 || dtoReview.getRating() > 5)
+        {
+            throw new IllegalArgumentException("Rating must be between 0 and 5");
+        }
+        Review review = new Review();
+        review.setClient(client);
+        review.setProduct(product);
+        review.setRating(dtoReview.getRating());
+        review.setComment(dtoReview.getComment());
+        return reviewsRepository.save(review);
+    }
+    @Override
+    public Review updateReview(DTOReview dtoReview)
+    {
+        Review reviewFound = reviewsRepository.findById(dtoReview.getId()).orElse(null);
+        if(reviewFound == null)
+        {
+            throw new ResourceNotFoundException("Review with id:" + dtoReview.getId() + "can not be found");
+        }
+        Product product = (dtoReview.getProductId() != null) ? productService.findById(dtoReview.getProductId()) : null;
+        Client client = (dtoReview.getClientId() != null) ? clientService.findById(dtoReview.getClientId()) : null;
+        if(dtoReview.getRating() == null || dtoReview.getRating() < 0 || dtoReview.getRating() > 5)
+        {
+            throw new IllegalArgumentException("Rating must be between 0 and 5");
+        }
+        reviewFound.setClient(client);
+        reviewFound.setProduct(product);
+        reviewFound.setRating(dtoReview.getRating());
+        reviewFound.setComment(dtoReview.getComment());
+        return reviewsRepository.save(reviewFound);
+    }
+    @Override
+    public Review findById(Long id)
+    {
+        Review reviewFound = reviewsRepository.findById(id).orElse(null);
+        if(reviewFound == null)
+        {
+            throw new ResourceNotFoundException("Review with id:" + id + "can not be found");
+        }
+        return reviewFound;
+    }
+    @Override
+    public void deleteReview(Long id)
+    {
+        Review reviewFound = reviewsRepository.findById(id).orElse(null);
+        if(reviewFound == null)
+        {
+            throw new ResourceNotFoundException("Review with id:" + id + "can not be found");
+        }
+        reviewsRepository.delete(reviewFound);
+    }
+    @Override
+    public List<Review> listAllReview()
+    {
+        return reviewsRepository.findAll();
+    }
+}

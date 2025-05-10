@@ -1,0 +1,36 @@
+package backend.project.serviceimpl;
+
+import backend.project.entities.Roles;
+import backend.project.exceptions.InvalidDataException;
+import backend.project.repositories.RolesRepository;
+import backend.project.services.RolesService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class RolesServiceImpl implements RolesService {
+
+    @Autowired
+    private RolesRepository rolesRepository;
+
+    @Override
+    public Roles insertRoles(Roles roles)
+    {
+        if(roles.getName()==null || roles.getName().isBlank())
+        {
+            throw new InvalidDataException("Roles name can not be blank");
+        }
+        return rolesRepository.save(roles);
+    }
+
+    @Override
+    public Roles findByName(String name)
+    {
+        Roles rolFound= rolesRepository.findByName(name);
+        if (rolFound==null)
+        {
+            throw new InvalidDataException("Roles with name: "+ name+ " can not be found");
+        }
+        return rolFound;
+    }
+}
